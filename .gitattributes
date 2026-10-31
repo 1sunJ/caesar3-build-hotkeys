@@ -1,0 +1,2 @@
+# Keep patches byte-for-byte so git apply works on every platform
+*.patch -text
