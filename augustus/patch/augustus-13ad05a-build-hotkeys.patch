@@ -1,0 +1,594 @@
+diff --git a/src/core/config.c b/src/core/config.c
+index c16eddb..b515ba2 100644
+--- a/src/core/config.c
++++ b/src/core/config.c
+@@ -211,7 +211,7 @@ static int default_values[CONFIG_MAX_ENTRIES] = {
+     [CONFIG_GP_CH_HOUSING_PRE_MERGE_VACANT_LOTS] = 1,
+     [CONFIG_UI_BUILD_SHOW_RESERVOIR_RANGES] = 1,
+     [CONFIG_UI_EMPIRE_SMART_BORDER_PLACEMENT] = 1,
+-    [CONFIG_UI_ENABLE_BUILD_MENU_SHORTCUTS] = 0,
++    [CONFIG_UI_ENABLE_BUILD_MENU_SHORTCUTS] = 1,
+     [CONFIG_UI_EMPIRE_CLICK_TO_DELETE] = 0,
+     [CONFIG_UI_EMPIRE_CONFIRM_DELETE] = 1,
+     [CONFIG_GP_CH_ALWAYS_DESTROY_BRIDGES] = 0,
+diff --git a/src/core/hotkey_config.c b/src/core/hotkey_config.c
+index f3330f5..2c12db4 100644
+--- a/src/core/hotkey_config.c
++++ b/src/core/hotkey_config.c
+@@ -14,7 +14,8 @@
+ 
+ #define HOTKEY_CONFIG_UNVERSIONED 0
+ #define HOTKEY_CONFIG_ZOOM 1
+-#define HOTKEY_CURRENT_VERSION HOTKEY_CONFIG_ZOOM
++#define HOTKEY_CONFIG_BUILD_MENUS 2
++#define HOTKEY_CURRENT_VERSION HOTKEY_CONFIG_BUILD_MENUS
+ 
+ static const char *INI_FILENAME = "augustus-hotkeys.ini";
+ 
+@@ -148,9 +149,38 @@ static const char *ini_keys[] = {
+     "editor_empire_pick_tool",
+     "game_quicksave",
+     "game_quickload",
+-    "close"
++    "close",
++    "build_menu_water",
++    "build_menu_health",
++    "build_menu_temples",
++    "build_menu_education",
++    "build_menu_entertainment",
++    "build_menu_administration",
++    "build_menu_engineering",
++    "build_menu_security",
++    "build_menu_industry"
+ };
+ 
++// Actions that received a default key in HOTKEY_CONFIG_BUILD_MENUS.
++// Older hotkey files don't mention them, so their defaults are added on load.
++static const hotkey_action build_menu_actions[] = {
++    HOTKEY_BUILD_VACANT_HOUSE,
++    HOTKEY_BUILD_CLEAR_LAND,
++    HOTKEY_BUILD_ROAD,
++    HOTKEY_BUILD_ROADBLOCK,
++    HOTKEY_BUILD_MENU_WATER,
++    HOTKEY_BUILD_MENU_HEALTH,
++    HOTKEY_BUILD_MENU_TEMPLES,
++    HOTKEY_BUILD_MENU_EDUCATION,
++    HOTKEY_BUILD_MENU_ENTERTAINMENT,
++    HOTKEY_BUILD_MENU_ADMINISTRATION,
++    HOTKEY_BUILD_MENU_ENGINEERING,
++    HOTKEY_BUILD_MENU_SECURITY,
++    HOTKEY_BUILD_MENU_INDUSTRY
++};
++
++#define NUM_BUILD_MENU_ACTIONS ((int) (sizeof(build_menu_actions) / sizeof(hotkey_action)))
++
+ static struct {
+     hotkey_mapping default_mappings[HOTKEY_MAX_ITEMS][2];
+     hotkey_mapping mappings[MAX_MAPPINGS];
+@@ -201,9 +231,10 @@ static void init_defaults(void)
+     set_mapping(KEY_TYPE_MOUSE_SCROLL_UP, KEY_MOD_NONE, HOTKEY_ZOOM_IN);
+     set_mapping(KEY_TYPE_MOUSE_SCROLL_DOWN, KEY_MOD_NONE, HOTKEY_ZOOM_OUT);
+     set_mapping(KEY_TYPE_MIDDLE_MOUSE_BUTTON, KEY_MOD_NONE, HOTKEY_RESET_ZOOM);
+-    set_layout_mapping("R", KEY_TYPE_R, KEY_MOD_NONE, HOTKEY_ROTATE_BUILDING);
++    // R and X are taken by the build menu keys below, so these use Shift
++    set_layout_mapping("R", KEY_TYPE_R, KEY_MOD_SHIFT, HOTKEY_ROTATE_BUILDING);
+     set_layout_mapping("Q", KEY_TYPE_Q, KEY_MOD_NONE, HOTKEY_BUILD_CLONE);
+-    set_layout_mapping("X", KEY_TYPE_X, KEY_MOD_NONE, HOTKEY_MOTHBALL_TOGGLE);
++    set_layout_mapping("X", KEY_TYPE_X, KEY_MOD_SHIFT, HOTKEY_MOTHBALL_TOGGLE);
+     set_mapping(KEY_TYPE_1, KEY_MOD_NONE, HOTKEY_SHOW_ADVISOR_LABOR);
+     set_mapping(KEY_TYPE_2, KEY_MOD_NONE, HOTKEY_SHOW_ADVISOR_MILITARY);
+     set_mapping(KEY_TYPE_3, KEY_MOD_NONE, HOTKEY_SHOW_ADVISOR_IMPERIAL);
+@@ -257,6 +288,19 @@ static void init_defaults(void)
+     set_mapping(KEY_TYPE_F12, KEY_MOD_CTRL, HOTKEY_SAVE_CITY_SCREENSHOT);
+     set_mapping(KEY_TYPE_F12, KEY_MOD_SHIFT, HOTKEY_SAVE_MINIMAP_SCREENSHOT);
+     set_layout_mapping("X", KEY_TYPE_X, KEY_MOD_CTRL, HOTKEY_EDITOR_EMPIRE_DELETE_OBJECT);
++    set_layout_mapping("H", KEY_TYPE_H, KEY_MOD_NONE, HOTKEY_BUILD_VACANT_HOUSE);
++    set_layout_mapping("X", KEY_TYPE_X, KEY_MOD_NONE, HOTKEY_BUILD_CLEAR_LAND);
++    set_layout_mapping("R", KEY_TYPE_R, KEY_MOD_NONE, HOTKEY_BUILD_ROAD);
++    set_layout_mapping("B", KEY_TYPE_B, KEY_MOD_NONE, HOTKEY_BUILD_ROADBLOCK);
++    set_layout_mapping("A", KEY_TYPE_A, KEY_MOD_NONE, HOTKEY_BUILD_MENU_WATER);
++    set_layout_mapping("K", KEY_TYPE_K, KEY_MOD_NONE, HOTKEY_BUILD_MENU_HEALTH);
++    set_layout_mapping("G", KEY_TYPE_G, KEY_MOD_NONE, HOTKEY_BUILD_MENU_TEMPLES);
++    set_layout_mapping("S", KEY_TYPE_S, KEY_MOD_NONE, HOTKEY_BUILD_MENU_EDUCATION);
++    set_layout_mapping("N", KEY_TYPE_N, KEY_MOD_NONE, HOTKEY_BUILD_MENU_ENTERTAINMENT);
++    set_layout_mapping("V", KEY_TYPE_V, KEY_MOD_NONE, HOTKEY_BUILD_MENU_ADMINISTRATION);
++    set_layout_mapping("E", KEY_TYPE_E, KEY_MOD_NONE, HOTKEY_BUILD_MENU_ENGINEERING);
++    set_layout_mapping("M", KEY_TYPE_M, KEY_MOD_NONE, HOTKEY_BUILD_MENU_SECURITY);
++    set_layout_mapping("I", KEY_TYPE_I, KEY_MOD_NONE, HOTKEY_BUILD_MENU_INDUSTRY);
+ }
+ 
+ const hotkey_mapping *hotkey_for_action(hotkey_action action, int index)
+@@ -315,6 +359,33 @@ static void add_mapping(int hotkey_id, const char *value)
+     }
+ }
+ 
++static int is_key_in_use(key_type key, key_modifier_type modifiers)
++{
++    for (int i = 0; i < data.num_mappings; i++) {
++        if (data.mappings[i].key == key && data.mappings[i].modifiers == modifiers) {
++            return 1;
++        }
++    }
++    return 0;
++}
++
++static void add_build_menu_defaults(void)
++{
++    for (int i = 0; i < NUM_BUILD_MENU_ACTIONS; i++) {
++        hotkey_action action = build_menu_actions[i];
++        if (hotkey_for_action(action, 0)) {
++            continue;
++        }
++        for (int index = 0; index < 2; index++) {
++            const hotkey_mapping *mapping = hotkey_default_for_action(action, index);
++            // Never take a key away from an action the player has already set up
++            if (mapping->key && !is_key_in_use(mapping->key, mapping->modifiers)) {
++                hotkey_config_add_mapping(mapping);
++            }
++        }
++    }
++}
++
+ static void load_file(void)
+ {
+     hotkey_config_clear();
+@@ -386,6 +457,9 @@ static void load_file(void)
+         hotkey_config_add_mapping(hotkey_default_for_action(HOTKEY_ZOOM_OUT, 0));
+         hotkey_config_add_mapping(hotkey_default_for_action(HOTKEY_RESET_ZOOM, 0));
+     }
++    if (version < HOTKEY_CONFIG_BUILD_MENUS) {
++        add_build_menu_defaults();
++    }
+ }
+ 
+ void hotkey_config_load(void)
+diff --git a/src/core/hotkey_config.h b/src/core/hotkey_config.h
+index 01b30a3..33d60cb 100644
+--- a/src/core/hotkey_config.h
++++ b/src/core/hotkey_config.h
+@@ -134,6 +134,15 @@ typedef enum {
+     HOTKEY_SAVE_QUICKSAVE,
+     HOTKEY_SAVE_QUICKLOAD,
+     HOTKEY_CLOSE,
++    HOTKEY_BUILD_MENU_WATER,
++    HOTKEY_BUILD_MENU_HEALTH,
++    HOTKEY_BUILD_MENU_TEMPLES,
++    HOTKEY_BUILD_MENU_EDUCATION,
++    HOTKEY_BUILD_MENU_ENTERTAINMENT,
++    HOTKEY_BUILD_MENU_ADMINISTRATION,
++    HOTKEY_BUILD_MENU_ENGINEERING,
++    HOTKEY_BUILD_MENU_SECURITY,
++    HOTKEY_BUILD_MENU_INDUSTRY,
+     HOTKEY_MAX_ITEMS
+ } hotkey_action;
+ 
+diff --git a/src/graphics/text.c b/src/graphics/text.c
+index 4a30ebc..8fabe4b 100644
+--- a/src/graphics/text.c
++++ b/src/graphics/text.c
+@@ -808,11 +808,14 @@ int text_draw_vertically_centered(const uint8_t *str,
+ 
+ void text_draw_build_menu_with_index(const uint8_t *str, int index, int x_offset, int y_offset, int box_width, font_t font, color_t color)
+ {
++    // Number row keys that select the 1st to 12th menu item
++    static const char index_keys[] = "1234567890-=";
++
+     uint8_t strx[NUMBER_BUFFER_LENGTH];
+     uint8_t *current = string_copy(str, strx, NUMBER_BUFFER_LENGTH - 5);
+ 
+     *current++ = '(';
+-    current += string_from_int(current, index, 0);
++    *current++ = index_keys[(index - 1) % (sizeof(index_keys) - 1)];
+     *current++ = ')';
+     *current = 0;
+ 
+diff --git a/src/graphics/text.h b/src/graphics/text.h
+index d58e7d7..973d1bd 100644
+--- a/src/graphics/text.h
++++ b/src/graphics/text.h
+@@ -73,5 +73,9 @@ int text_draw_vertically_centered(const uint8_t *str,
+  */
+ int text_measure_multiline(const uint8_t *str, int box_width, font_t font, int *largest_width);
+ 
++/**
++ * Draws a build menu item name followed by the key that selects it
++ * @param index 1-based item position: 1-9 and 0 for 1-10, then - and = for 11 and 12
++ */
+ void text_draw_build_menu_with_index(const uint8_t *str, int index, int x_offset, int y_offset, int box_width, font_t font, color_t color);
+ #endif // GRAPHICS_TEXT_H
+diff --git a/src/input/hotkey.c b/src/input/hotkey.c
+index 90573bc..23806e8 100644
+--- a/src/input/hotkey.c
++++ b/src/input/hotkey.c
+@@ -1,5 +1,6 @@
+ #include "hotkey.h"
+ 
++#include "building/menu.h"
+ #include "building/type.h"
+ #include "city/constants.h"
+ #include "empire/editor.h"
+@@ -40,10 +41,6 @@ typedef struct {
+     int next_track;
+ } global_hotkeys;
+ 
+-typedef struct {
+-    key_type keys[10];
+-} build_menu_hotkeys;
+-
+ static struct {
+     global_hotkeys global_hotkey_state;
+     hotkeys hotkey_state;
+@@ -52,7 +49,6 @@ static struct {
+     arrow_definition *arrows;
+     int num_arrows;
+     key_modifier_type modifiers;
+-    build_menu_hotkeys build_menu_hotkeys;
+ } data;
+ 
+ static void set_definition_for_action(hotkey_action action, hotkey_definition *def)
+@@ -522,6 +518,42 @@ static void set_definition_for_action(hotkey_action action, hotkey_definition *d
+         case HOTKEY_CLOSE:
+             def->action = &data.hotkey_state.close_pressed;
+             break;
++        case HOTKEY_BUILD_MENU_WATER:
++            def->action = &data.hotkey_state.build_menu;
++            def->value = BUILD_MENU_WATER;
++            break;
++        case HOTKEY_BUILD_MENU_HEALTH:
++            def->action = &data.hotkey_state.build_menu;
++            def->value = BUILD_MENU_HEALTH;
++            break;
++        case HOTKEY_BUILD_MENU_TEMPLES:
++            def->action = &data.hotkey_state.build_menu;
++            def->value = BUILD_MENU_TEMPLES;
++            break;
++        case HOTKEY_BUILD_MENU_EDUCATION:
++            def->action = &data.hotkey_state.build_menu;
++            def->value = BUILD_MENU_EDUCATION;
++            break;
++        case HOTKEY_BUILD_MENU_ENTERTAINMENT:
++            def->action = &data.hotkey_state.build_menu;
++            def->value = BUILD_MENU_ENTERTAINMENT;
++            break;
++        case HOTKEY_BUILD_MENU_ADMINISTRATION:
++            def->action = &data.hotkey_state.build_menu;
++            def->value = BUILD_MENU_ADMINISTRATION;
++            break;
++        case HOTKEY_BUILD_MENU_ENGINEERING:
++            def->action = &data.hotkey_state.build_menu;
++            def->value = BUILD_MENU_ENGINEERING;
++            break;
++        case HOTKEY_BUILD_MENU_SECURITY:
++            def->action = &data.hotkey_state.build_menu;
++            def->value = BUILD_MENU_SECURITY;
++            break;
++        case HOTKEY_BUILD_MENU_INDUSTRY:
++            def->action = &data.hotkey_state.build_menu;
++            def->value = BUILD_MENU_INDUSTRY;
++            break;
+         default:
+             def->action = 0;
+     }
+@@ -640,11 +672,6 @@ void hotkey_install_mapping(hotkey_mapping *mappings, int num_mappings)
+             add_definition(&mappings[i]);
+         }
+     }
+-
+-    for (int i = 0; i < 10; i++) {
+-        int k = KEY_TYPE_1 + i;
+-        data.build_menu_hotkeys.keys[i] = k;
+-    }
+ }
+ 
+ const hotkeys *hotkey_state(void)
+@@ -658,6 +685,26 @@ void hotkey_reset_state(void)
+     memset(&data.global_hotkey_state, 0, sizeof(data.global_hotkey_state));
+ }
+ 
++static int build_menu_index_for_key(key_type key)
++{
++    if (key >= KEY_TYPE_1 && key <= KEY_TYPE_9) {
++        return key - KEY_TYPE_1 + 1;
++    } else if (key >= KEY_TYPE_KP_1 && key <= KEY_TYPE_KP_9) {
++        return key - KEY_TYPE_KP_1 + 1;
++    }
++    switch (key) {
++        case KEY_TYPE_0:
++        case KEY_TYPE_KP_0:
++            return 10;
++        case KEY_TYPE_MINUS:
++            return 11;
++        case KEY_TYPE_EQUALS:
++            return 12;
++        default:
++            return 0;
++    }
++}
++
+ void hotkey_key_pressed(key_type key, key_modifier_type modifiers, int repeat)
+ {
+     data.modifiers = modifiers;
+@@ -669,6 +716,14 @@ void hotkey_key_pressed(key_type key, key_modifier_type modifiers, int repeat)
+     if (key == KEY_TYPE_NONE) {
+         return;
+     }
++    // Number row keys pick an item in the open build menu instead of opening an advisor
++    if (window_is(WINDOW_BUILD_MENU) && modifiers == KEY_MOD_NONE && !repeat) {
++        int item = build_menu_index_for_key(key);
++        if (item) {
++            data.hotkey_state.build_menu_index_num = item;
++            return;
++        }
++    }
+     int found_action = 0;
+     for (int i = 0; i < data.num_definitions; i++) {
+         hotkey_definition *def = &data.definitions[i];
+@@ -681,12 +736,6 @@ void hotkey_key_pressed(key_type key, key_modifier_type modifiers, int repeat)
+             found_action = 1;
+         }
+     }
+-    for (int i = 0; i < 10; i++) {
+-        if (data.build_menu_hotkeys.keys[i] == key) {
+-            data.hotkey_state.build_menu_index_num = (key - KEY_TYPE_1) + 1;
+-            found_action = 1;
+-        }
+-    }
+     if (found_action) {
+         return;
+     }
+diff --git a/src/input/hotkey.h b/src/input/hotkey.h
+index 776fde2..c4786b3 100644
+--- a/src/input/hotkey.h
++++ b/src/input/hotkey.h
+@@ -43,6 +43,8 @@ typedef struct {
+     int mothball_toggle;
+     int storage_order;
+     int delete_empire_object;
++    int build_menu;
++    // only set while the build menu is open: 1-based item index from the number row
+     int build_menu_index_num;
+     int empire_tool;
+     int pick_empire_tool;
+diff --git a/src/widget/sidebar/city.c b/src/widget/sidebar/city.c
+index 9678988..0c1da5c 100644
+--- a/src/widget/sidebar/city.c
++++ b/src/widget/sidebar/city.c
+@@ -6,6 +6,7 @@
+ #include "city/warning.h"
+ #include "core/config.h"
+ #include "core/direction.h"
++#include "core/hotkey_config.h"
+ #include "game/campaign.h"
+ #include "game/orientation.h"
+ #include "game/state.h"
+@@ -100,10 +101,48 @@ static image_button buttons_top_expanded[] = {
+     {123, 184, 33, 22, IB_NORMAL, GROUP_SIDEBAR_BRIEFING_ROTATE_BUTTONS, 9, button_rotate, button_none, 1, 0, 1},
+ };
+ 
++// Same order as the first 12 entries of buttons_build_collapsed and buttons_build_expanded
++static const hotkey_action build_button_hotkeys[] = {
++    HOTKEY_BUILD_VACANT_HOUSE,
++    HOTKEY_BUILD_CLEAR_LAND,
++    HOTKEY_BUILD_ROAD,
++    HOTKEY_BUILD_MENU_WATER,
++    HOTKEY_BUILD_MENU_HEALTH,
++    HOTKEY_BUILD_MENU_TEMPLES,
++    HOTKEY_BUILD_MENU_EDUCATION,
++    HOTKEY_BUILD_MENU_ENTERTAINMENT,
++    HOTKEY_BUILD_MENU_ADMINISTRATION,
++    HOTKEY_BUILD_MENU_ENGINEERING,
++    HOTKEY_BUILD_MENU_SECURITY,
++    HOTKEY_BUILD_MENU_INDUSTRY
++};
++
+ static struct {
+     int focus_button_for_tooltip;
+ } data;
+ 
++static void draw_build_button_hotkeys(int x_offset, const image_button *buttons)
++{
++    if (!config_get(CONFIG_UI_ENABLE_BUILD_MENU_SHORTCUTS)) {
++        return;
++    }
++    for (int i = 0; i < 12; i++) {
++        const hotkey_mapping *mapping = hotkey_for_action(build_button_hotkeys[i], 0);
++        if (!mapping || !buttons[i].enabled) {
++            continue;
++        }
++        const uint8_t *name = key_combination_display_name(mapping->key, mapping->modifiers);
++        // Dark badge in the bottom right corner, so the key stays readable on any button image
++        int badge_width = text_get_width(name, FONT_SMALL_PLAIN) + 4;
++        int badge_height = 12;
++        int x = x_offset + buttons[i].x_offset + buttons[i].width - badge_width - 1;
++        int y = 24 + buttons[i].y_offset + buttons[i].height - badge_height - 1;
++        graphics_fill_rect(x, y, badge_width, badge_height, COLOR_TOOLTIP);
++        graphics_draw_rect(x, y, badge_width, badge_height, COLOR_BLACK);
++        text_draw(name, x + 2, y + 2, FONT_SMALL_PLAIN, COLOR_FONT_YELLOW);
++    }
++}
++
+ static void draw_overlay_text(int x_offset)
+ {
+     if (game_state_overlay()) {
+@@ -151,6 +190,7 @@ static void draw_buttons_collapsed(int x_offset)
+     buttons_build_collapsed[4].image_name = asclepius ? "Asclepius Button" : 0;
+     image_buttons_draw(x_offset, 24, button_expand_sidebar, 1);
+     image_buttons_draw(x_offset, 24, buttons_build_collapsed, 12);
++    draw_build_button_hotkeys(x_offset, buttons_build_collapsed);
+ }
+ 
+ static void draw_buttons_expanded(int x_offset)
+@@ -161,6 +201,7 @@ static void draw_buttons_expanded(int x_offset)
+     buttons_build_expanded[12].enabled = game_can_undo();
+     image_buttons_draw(x_offset, 24, buttons_overlays_collapse_sidebar, 2);
+     image_buttons_draw(x_offset, 24, buttons_build_expanded, 15);
++    draw_build_button_hotkeys(x_offset, buttons_build_expanded);
+     image_buttons_draw(x_offset, 24, buttons_top_expanded, 6);
+ }
+ 
+diff --git a/src/window/build_menu.c b/src/window/build_menu.c
+index c09456a..0e2a95a 100644
+--- a/src/window/build_menu.c
++++ b/src/window/build_menu.c
+@@ -242,13 +242,13 @@ static void draw_menu_buttons(void)
+         int type = building_menu_type(data.selected_submenu, item_index);
+ 
+         int menu_index = 0;
+-        if (config_get(CONFIG_UI_ENABLE_BUILD_MENU_SHORTCUTS) && i < 10) {
++        if (config_get(CONFIG_UI_ENABLE_BUILD_MENU_SHORTCUTS) && i < 12) {
+             menu_index = i + 1;
+         }
+ 
+         if (is_auto_cycle_button(type)) {
+             if (menu_index > 0) {
+-                text_draw_build_menu_with_index(translation_for(TR_AUTO_CYCLE_TEMPLES), menu_index % 10,
++                text_draw_build_menu_with_index(translation_for(TR_AUTO_CYCLE_TEMPLES), menu_index,
+                 item_x_align + MENU_TEXT_X_OFFSET, data.y_offset + MENU_Y_OFFSET + 4 + MENU_ITEM_HEIGHT * i,
+                 MENU_ITEM_WIDTH, FONT_NORMAL_GREEN, 0);
+             } else {
+@@ -286,7 +286,7 @@ static void draw_menu_buttons(void)
+         }
+ 
+         if (menu_index > 0) {
+-            text_draw_build_menu_with_index(menu_name, menu_index % 10, item_x_align + MENU_TEXT_X_OFFSET,
++            text_draw_build_menu_with_index(menu_name, menu_index, item_x_align + MENU_TEXT_X_OFFSET,
+                 data.y_offset + MENU_Y_OFFSET + 4 + MENU_ITEM_HEIGHT * i, MENU_ITEM_WIDTH, FONT_NORMAL_GREEN, 0);
+         } else {
+             text_draw_centered(menu_name, item_x_align + text_offset, data.y_offset + MENU_Y_OFFSET + 4 + MENU_ITEM_HEIGHT * i,
+@@ -361,21 +361,33 @@ static int button_index_to_submenu_item(int index)
+     return item;
+ }
+ 
+-static int handle_input_build_menu_index(const hotkeys *h)
++static int handle_hotkeys(const hotkeys *h)
+ {
+-    if (config_get(CONFIG_UI_ENABLE_BUILD_MENU_SHORTCUTS) && h->build_menu_index_num &&
+-        h->build_menu_index_num <= (int) data.num_items) {
+-        button_menu_item(button_index_to_submenu_item(h->build_menu_index_num - 1));
+-        return h->build_menu_index_num;
++    if (h->build_menu_index_num) {
++        if (config_get(CONFIG_UI_ENABLE_BUILD_MENU_SHORTCUTS) && h->build_menu_index_num <= (int) data.num_items) {
++            button_menu_item(button_index_to_submenu_item(h->build_menu_index_num - 1));
++        }
++        return 1;
++    }
++    if (h->build_menu) {
++        if (building_menu_count_items(h->build_menu) > 0) {
++            window_build_menu_show(h->build_menu);
++        }
++        return 1;
++    }
++    if (h->building) {
++        window_build_menu_hide();
++        window_city_set_construction_type(h->building, 0);
++        return 1;
+     }
+     return 0;
+ }
+ 
+ static void handle_input(const mouse *m, const hotkeys *h)
+ {
+-    if (handle_build_submenu(m) ||
+-        widget_sidebar_city_handle_mouse_build_menu(m) ||
+-        handle_input_build_menu_index(h)) {
++    if (handle_hotkeys(h) ||
++        handle_build_submenu(m) ||
++        widget_sidebar_city_handle_mouse_build_menu(m)) {
+         return;
+     }
+     if (input_go_back_requested(m, h) || click_outside_menu(m, get_sidebar_x_offset())) {
+diff --git a/src/window/city.c b/src/window/city.c
+index 795406f..6478184 100644
+--- a/src/window/city.c
++++ b/src/window/city.c
+@@ -47,6 +47,7 @@
+ #include "widget/sidebar/extra.h"
+ #include "widget/sidebar/military.h"
+ #include "window/advisors.h"
++#include "window/build_menu.h"
+ #include "window/building_info.h"
+ #include "window/empire.h"
+ #include "window/file_dialog.h"
+@@ -728,7 +729,7 @@ static void toggle_pause(void)
+     city_warning_clear_all();
+ }
+ 
+-static void set_construction_building_type(building_type type, int rotation)
++void window_city_set_construction_type(building_type type, int rotation)
+ {
+     if (scenario_allowed_building(type) && building_menu_is_enabled(type)) {
+         building_construction_cancel();
+@@ -837,7 +838,7 @@ static void handle_hotkeys(const hotkeys *h)
+         building_rotation_rotate_backward();
+     }
+     if (h->building) {
+-        set_construction_building_type(h->building, 0);
++        window_city_set_construction_type(h->building, 0);
+     }
+     if (h->undo) {
+         game_undo_perform();
+@@ -871,7 +872,7 @@ static void handle_hotkeys(const hotkeys *h)
+         building_type type = building_clone_type_from_grid_offset(widget_city_current_grid_offset());
+         int rotation = building_clone_rotation_from_grid_offset(widget_city_current_grid_offset());
+         if (type) {
+-            set_construction_building_type(type, rotation);
++            window_city_set_construction_type(type, rotation);
+         }
+ 
+     }
+@@ -897,6 +898,9 @@ static void handle_hotkeys(const hotkeys *h)
+     if (h->show_messages) {
+         window_message_list_show();
+     }
++    if (h->build_menu && !building_construction_in_progress() && building_menu_count_items(h->build_menu) > 0) {
++        window_build_menu_show(h->build_menu);
++    }
+ }
+ 
+ static void handle_input(const mouse *m, const hotkeys *h)
+diff --git a/src/window/city.h b/src/window/city.h
+index aba7eae..abb97c5 100644
+--- a/src/window/city.h
++++ b/src/window/city.h
+@@ -1,10 +1,13 @@
+ #ifndef WINDOW_CITY_H
+ #define WINDOW_CITY_H
+ 
++#include "building/type.h"
+ #include "graphics/weather.h"
+ 
+ int window_city_military_is_cursor_in_menu(void);
+ 
++void window_city_set_construction_type(building_type type, int rotation);
++
+ void window_city_draw_all(void);
+ void window_city_draw_panels(void);
+ void window_city_draw(void);
+diff --git a/src/window/hotkey_config.c b/src/window/hotkey_config.c
+index f2cc643..2efaeda 100644
+--- a/src/window/hotkey_config.c
++++ b/src/window/hotkey_config.c
+@@ -23,6 +23,7 @@
+ 
+ #define TR_NONE -1
+ #define GROUP_BUILDINGS 28
++#define GROUP_SIDEBAR_TOOLTIPS 68
+ 
+ #define NUM_VISIBLE_OPTIONS 14
+ #define NUM_BOTTOM_BUTTONS 3
+@@ -86,6 +87,15 @@ static hotkey_widget hotkey_widgets[] = {
+     {HOTKEY_BUILD_REPAIR_LAND, TR_BUILDING_LAND_REPAIR},
+     {HOTKEY_BUILD_VACANT_HOUSE, TR_NONE, 67, 7},
+     {HOTKEY_BUILD_ROAD, TR_NONE, GROUP_BUILDINGS, BUILDING_ROAD},
++    {HOTKEY_BUILD_MENU_WATER, TR_NONE, GROUP_SIDEBAR_TOOLTIPS, 23},
++    {HOTKEY_BUILD_MENU_HEALTH, TR_NONE, GROUP_SIDEBAR_TOOLTIPS, 24},
++    {HOTKEY_BUILD_MENU_TEMPLES, TR_NONE, GROUP_SIDEBAR_TOOLTIPS, 25},
++    {HOTKEY_BUILD_MENU_EDUCATION, TR_NONE, GROUP_SIDEBAR_TOOLTIPS, 26},
++    {HOTKEY_BUILD_MENU_ENTERTAINMENT, TR_NONE, GROUP_SIDEBAR_TOOLTIPS, 27},
++    {HOTKEY_BUILD_MENU_ADMINISTRATION, TR_NONE, GROUP_SIDEBAR_TOOLTIPS, 28},
++    {HOTKEY_BUILD_MENU_ENGINEERING, TR_NONE, GROUP_SIDEBAR_TOOLTIPS, 29},
++    {HOTKEY_BUILD_MENU_SECURITY, TR_NONE, GROUP_SIDEBAR_TOOLTIPS, 30},
++    {HOTKEY_BUILD_MENU_INDUSTRY, TR_NONE, GROUP_SIDEBAR_TOOLTIPS, 31},
+     {HOTKEY_BUILD_PLAZA, TR_NONE, GROUP_BUILDINGS, BUILDING_PLAZA},
+     {HOTKEY_BUILD_GARDENS, TR_NONE, GROUP_BUILDINGS, BUILDING_GARDENS},
+     {HOTKEY_BUILD_OVERGROWN_GARDENS, TR_NONE, GROUP_BUILDINGS, BUILDING_OVERGROWN_GARDENS},

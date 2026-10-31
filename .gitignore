@@ -1,0 +1,10 @@
+# Upstream source checkouts (recreate them with the build steps in each README)
+/julius/julius/
+/augustus/augustus/
+
+# Build output and release packages (upload the zips to GitHub Releases instead)
+build/
+dist/
+
+# Local editor settings
+/.vscode/
