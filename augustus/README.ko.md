@@ -111,7 +111,7 @@ B            길 차단로
 
 ## 설정
 
-설정 파일은 `%APPDATA%\augustus\augustus\` 아래에 저장됩니다. (단축키: `augustus-hotkeys.ini`)
+설정 파일 `augustus.ini`와 단축키 파일 `augustus-hotkeys.ini`는 시저3 게임 폴더에 저장됩니다. 설정에서 사용자 폴더를 따로 지정했다면 그 폴더에 저장됩니다.
 
 - **단축키 표시 켜기/끄기**: 메뉴의 설정 → 사용자 인터페이스 → 도시 화면에서 "건설 메뉴 단축키 사용"을 체크하거나 해제합니다. 끄면 사이드바 글자, 메뉴 번호, 메뉴 안 숫자 선택이 꺼집니다. 카테고리 키(`A`, `G` …)는 계속 동작합니다.
   (`augustus.ini`의 `ui_enable_build_menu_shortcuts=1` / `0`. 원래 Augustus에 있던 설정이며, 이 수정판은 기본값을 켜짐으로 바꿨습니다.)

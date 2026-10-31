@@ -114,7 +114,7 @@ Delete the folder you unzipped. Other Augustus versions ignore the extra setting
 
 ## Settings
 
-Settings are stored under `%APPDATA%\augustus\augustus\` (hotkeys: `augustus-hotkeys.ini`).
+The settings files `augustus.ini` and `augustus-hotkeys.ini` are stored in your Caesar III game folder, or in the user directory if you chose one in the options.
 
 - **Turn the shortcuts on or off**: in *Options → User Interface → City View*, check or uncheck "Enable build menu shortcuts". Turning it off removes the sidebar labels, menu numbers and number-key selection. The category keys (`A`, `G`, …) keep working.
   (`ui_enable_build_menu_shortcuts=1` / `0` in `augustus.ini`. This is an existing Augustus option; this build only turns it on by default.)
