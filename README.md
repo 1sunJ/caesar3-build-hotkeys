@@ -91,6 +91,7 @@ When no menu is open, the number keys open the advisors as usual.
 
 The keys were chosen to stay clear of the existing defaults (overlays `W` `F` `D` `C` `T`, pause `P`, legions `L`, …).
 Augustus already used `R` for *rotate building* and `X` for *mothball building*. In the Augustus mod these move to `Shift`+`R` and `Shift`+`X`.
+In Augustus, clear land and road have their own menus (repair area, highway, roadblock), so `X` and `R` open them like the other categories: clear land is `X` → `1`, road is `R` → `1`. In Julius they select the tool directly.
 
 Menu items that the current mission doesn't allow are hidden, and the numbers count only the visible items. Always go by the number shown in the menu.
 

@@ -12,20 +12,21 @@ index c16eddb..b515ba2 100644
      [CONFIG_UI_EMPIRE_CONFIRM_DELETE] = 1,
      [CONFIG_GP_CH_ALWAYS_DESTROY_BRIDGES] = 0,
 diff --git a/src/core/hotkey_config.c b/src/core/hotkey_config.c
-index f3330f5..2c12db4 100644
+index f3330f5..2161fda 100644
 --- a/src/core/hotkey_config.c
 +++ b/src/core/hotkey_config.c
-@@ -14,7 +14,8 @@
+@@ -14,7 +14,9 @@
  
  #define HOTKEY_CONFIG_UNVERSIONED 0
  #define HOTKEY_CONFIG_ZOOM 1
 -#define HOTKEY_CURRENT_VERSION HOTKEY_CONFIG_ZOOM
 +#define HOTKEY_CONFIG_BUILD_MENUS 2
-+#define HOTKEY_CURRENT_VERSION HOTKEY_CONFIG_BUILD_MENUS
++#define HOTKEY_CONFIG_ROAD_CLEAR_LAND_MENUS 3
++#define HOTKEY_CURRENT_VERSION HOTKEY_CONFIG_ROAD_CLEAR_LAND_MENUS
  
  static const char *INI_FILENAME = "augustus-hotkeys.ini";
  
-@@ -148,9 +149,38 @@ static const char *ini_keys[] = {
+@@ -148,9 +150,42 @@ static const char *ini_keys[] = {
      "editor_empire_pick_tool",
      "game_quicksave",
      "game_quickload",
@@ -39,10 +40,12 @@ index f3330f5..2c12db4 100644
 +    "build_menu_administration",
 +    "build_menu_engineering",
 +    "build_menu_security",
-+    "build_menu_industry"
++    "build_menu_industry",
++    "build_menu_clear_land",
++    "build_menu_road"
  };
  
-+// Actions that received a default key in HOTKEY_CONFIG_BUILD_MENUS.
++// Actions that received a default key in HOTKEY_CONFIG_BUILD_MENUS or later.
 +// Older hotkey files don't mention them, so their defaults are added on load.
 +static const hotkey_action build_menu_actions[] = {
 +    HOTKEY_BUILD_VACANT_HOUSE,
@@ -57,7 +60,9 @@ index f3330f5..2c12db4 100644
 +    HOTKEY_BUILD_MENU_ADMINISTRATION,
 +    HOTKEY_BUILD_MENU_ENGINEERING,
 +    HOTKEY_BUILD_MENU_SECURITY,
-+    HOTKEY_BUILD_MENU_INDUSTRY
++    HOTKEY_BUILD_MENU_INDUSTRY,
++    HOTKEY_BUILD_MENU_CLEAR_LAND,
++    HOTKEY_BUILD_MENU_ROAD
 +};
 +
 +#define NUM_BUILD_MENU_ACTIONS ((int) (sizeof(build_menu_actions) / sizeof(hotkey_action)))
@@ -65,7 +70,7 @@ index f3330f5..2c12db4 100644
  static struct {
      hotkey_mapping default_mappings[HOTKEY_MAX_ITEMS][2];
      hotkey_mapping mappings[MAX_MAPPINGS];
-@@ -201,9 +231,10 @@ static void init_defaults(void)
+@@ -201,9 +236,10 @@ static void init_defaults(void)
      set_mapping(KEY_TYPE_MOUSE_SCROLL_UP, KEY_MOD_NONE, HOTKEY_ZOOM_IN);
      set_mapping(KEY_TYPE_MOUSE_SCROLL_DOWN, KEY_MOD_NONE, HOTKEY_ZOOM_OUT);
      set_mapping(KEY_TYPE_MIDDLE_MOUSE_BUTTON, KEY_MOD_NONE, HOTKEY_RESET_ZOOM);
@@ -78,13 +83,14 @@ index f3330f5..2c12db4 100644
      set_mapping(KEY_TYPE_1, KEY_MOD_NONE, HOTKEY_SHOW_ADVISOR_LABOR);
      set_mapping(KEY_TYPE_2, KEY_MOD_NONE, HOTKEY_SHOW_ADVISOR_MILITARY);
      set_mapping(KEY_TYPE_3, KEY_MOD_NONE, HOTKEY_SHOW_ADVISOR_IMPERIAL);
-@@ -257,6 +288,19 @@ static void init_defaults(void)
+@@ -257,6 +293,20 @@ static void init_defaults(void)
      set_mapping(KEY_TYPE_F12, KEY_MOD_CTRL, HOTKEY_SAVE_CITY_SCREENSHOT);
      set_mapping(KEY_TYPE_F12, KEY_MOD_SHIFT, HOTKEY_SAVE_MINIMAP_SCREENSHOT);
      set_layout_mapping("X", KEY_TYPE_X, KEY_MOD_CTRL, HOTKEY_EDITOR_EMPIRE_DELETE_OBJECT);
 +    set_layout_mapping("H", KEY_TYPE_H, KEY_MOD_NONE, HOTKEY_BUILD_VACANT_HOUSE);
-+    set_layout_mapping("X", KEY_TYPE_X, KEY_MOD_NONE, HOTKEY_BUILD_CLEAR_LAND);
-+    set_layout_mapping("R", KEY_TYPE_R, KEY_MOD_NONE, HOTKEY_BUILD_ROAD);
++    // Clear land and road have their own menus in Augustus, so X and R open them like the other categories
++    set_layout_mapping("X", KEY_TYPE_X, KEY_MOD_NONE, HOTKEY_BUILD_MENU_CLEAR_LAND);
++    set_layout_mapping("R", KEY_TYPE_R, KEY_MOD_NONE, HOTKEY_BUILD_MENU_ROAD);
 +    set_layout_mapping("B", KEY_TYPE_B, KEY_MOD_NONE, HOTKEY_BUILD_ROADBLOCK);
 +    set_layout_mapping("A", KEY_TYPE_A, KEY_MOD_NONE, HOTKEY_BUILD_MENU_WATER);
 +    set_layout_mapping("K", KEY_TYPE_K, KEY_MOD_NONE, HOTKEY_BUILD_MENU_HEALTH);
@@ -98,7 +104,7 @@ index f3330f5..2c12db4 100644
  }
  
  const hotkey_mapping *hotkey_for_action(hotkey_action action, int index)
-@@ -315,6 +359,33 @@ static void add_mapping(int hotkey_id, const char *value)
+@@ -315,6 +365,33 @@ static void add_mapping(int hotkey_id, const char *value)
      }
  }
  
@@ -132,21 +138,21 @@ index f3330f5..2c12db4 100644
  static void load_file(void)
  {
      hotkey_config_clear();
-@@ -386,6 +457,9 @@ static void load_file(void)
+@@ -386,6 +463,9 @@ static void load_file(void)
          hotkey_config_add_mapping(hotkey_default_for_action(HOTKEY_ZOOM_OUT, 0));
          hotkey_config_add_mapping(hotkey_default_for_action(HOTKEY_RESET_ZOOM, 0));
      }
-+    if (version < HOTKEY_CONFIG_BUILD_MENUS) {
++    if (version < HOTKEY_CONFIG_ROAD_CLEAR_LAND_MENUS) {
 +        add_build_menu_defaults();
 +    }
  }
  
  void hotkey_config_load(void)
 diff --git a/src/core/hotkey_config.h b/src/core/hotkey_config.h
-index 01b30a3..33d60cb 100644
+index 01b30a3..df38f96 100644
 --- a/src/core/hotkey_config.h
 +++ b/src/core/hotkey_config.h
-@@ -134,6 +134,15 @@ typedef enum {
+@@ -134,6 +134,17 @@ typedef enum {
      HOTKEY_SAVE_QUICKSAVE,
      HOTKEY_SAVE_QUICKLOAD,
      HOTKEY_CLOSE,
@@ -159,6 +165,8 @@ index 01b30a3..33d60cb 100644
 +    HOTKEY_BUILD_MENU_ENGINEERING,
 +    HOTKEY_BUILD_MENU_SECURITY,
 +    HOTKEY_BUILD_MENU_INDUSTRY,
++    HOTKEY_BUILD_MENU_CLEAR_LAND,
++    HOTKEY_BUILD_MENU_ROAD,
      HOTKEY_MAX_ITEMS
  } hotkey_action;
  
@@ -197,7 +205,7 @@ index d58e7d7..973d1bd 100644
  void text_draw_build_menu_with_index(const uint8_t *str, int index, int x_offset, int y_offset, int box_width, font_t font, color_t color);
  #endif // GRAPHICS_TEXT_H
 diff --git a/src/input/hotkey.c b/src/input/hotkey.c
-index 90573bc..23806e8 100644
+index 90573bc..0192d22 100644
 --- a/src/input/hotkey.c
 +++ b/src/input/hotkey.c
 @@ -1,5 +1,6 @@
@@ -226,7 +234,7 @@ index 90573bc..23806e8 100644
  } data;
  
  static void set_definition_for_action(hotkey_action action, hotkey_definition *def)
-@@ -522,6 +518,42 @@ static void set_definition_for_action(hotkey_action action, hotkey_definition *d
+@@ -522,6 +518,50 @@ static void set_definition_for_action(hotkey_action action, hotkey_definition *d
          case HOTKEY_CLOSE:
              def->action = &data.hotkey_state.close_pressed;
              break;
@@ -266,10 +274,18 @@ index 90573bc..23806e8 100644
 +            def->action = &data.hotkey_state.build_menu;
 +            def->value = BUILD_MENU_INDUSTRY;
 +            break;
++        case HOTKEY_BUILD_MENU_CLEAR_LAND:
++            def->action = &data.hotkey_state.build_menu;
++            def->value = BUILD_MENU_CLEAR_LAND;
++            break;
++        case HOTKEY_BUILD_MENU_ROAD:
++            def->action = &data.hotkey_state.build_menu;
++            def->value = BUILD_MENU_ROAD;
++            break;
          default:
              def->action = 0;
      }
-@@ -640,11 +672,6 @@ void hotkey_install_mapping(hotkey_mapping *mappings, int num_mappings)
+@@ -640,11 +680,6 @@ void hotkey_install_mapping(hotkey_mapping *mappings, int num_mappings)
              add_definition(&mappings[i]);
          }
      }
@@ -281,7 +297,7 @@ index 90573bc..23806e8 100644
  }
  
  const hotkeys *hotkey_state(void)
-@@ -658,6 +685,26 @@ void hotkey_reset_state(void)
+@@ -658,6 +693,26 @@ void hotkey_reset_state(void)
      memset(&data.global_hotkey_state, 0, sizeof(data.global_hotkey_state));
  }
  
@@ -308,7 +324,7 @@ index 90573bc..23806e8 100644
  void hotkey_key_pressed(key_type key, key_modifier_type modifiers, int repeat)
  {
      data.modifiers = modifiers;
-@@ -669,6 +716,14 @@ void hotkey_key_pressed(key_type key, key_modifier_type modifiers, int repeat)
+@@ -669,6 +724,14 @@ void hotkey_key_pressed(key_type key, key_modifier_type modifiers, int repeat)
      if (key == KEY_TYPE_NONE) {
          return;
      }
@@ -323,7 +339,7 @@ index 90573bc..23806e8 100644
      int found_action = 0;
      for (int i = 0; i < data.num_definitions; i++) {
          hotkey_definition *def = &data.definitions[i];
-@@ -681,12 +736,6 @@ void hotkey_key_pressed(key_type key, key_modifier_type modifiers, int repeat)
+@@ -681,12 +744,6 @@ void hotkey_key_pressed(key_type key, key_modifier_type modifiers, int repeat)
              found_action = 1;
          }
      }
@@ -349,8 +365,49 @@ index 776fde2..c4786b3 100644
      int build_menu_index_num;
      int empire_tool;
      int pick_empire_tool;
+diff --git a/src/translation/english.c b/src/translation/english.c
+index 5902366..af8ec14 100644
+--- a/src/translation/english.c
++++ b/src/translation/english.c
+@@ -2397,7 +2397,9 @@ static translation_string all_strings[] = {
+     {TR_EDITOR_TOOL_BEACH, "Beach"},
+     {TR_TERRAIN_BEACH, "Beach"},
+     {TR_TERRAIN_BEACH_DESC, "A beach of fine sand. Pleasing to the eye and favoured by strollers, who dawdle along it, it yields sand and clay in plenty for the city."},
+-    {TR_CHEAT_FILL_MARKETS, "Filled all markets with food and goods"}
++    {TR_CHEAT_FILL_MARKETS, "Filled all markets with food and goods"},
++    {TR_HOTKEY_BUILD_MENU_CLEAR_LAND, "Clear land menu"},
++    {TR_HOTKEY_BUILD_MENU_ROAD, "Road menu"}
+ };
+ 
+ void translation_english(const translation_string **strings, int *num_strings)
+diff --git a/src/translation/korean.c b/src/translation/korean.c
+index c79bbbf..31d7196 100644
+--- a/src/translation/korean.c
++++ b/src/translation/korean.c
+@@ -2392,6 +2392,8 @@ static translation_string all_strings[] = {
+     {TR_TERRAIN_BEACH_DESC, "고운 모래가 깔린 해변입니다. 경관이 아름다워 산책을 즐기는 시민들이 느긋하게 거닐며, 도시에 풍부한 모래와 점토를 제공합니다."},
+     /* Korean-specific building name retained from the supplied translation. */
+     {TR_FIX_KOREAN_BUILDING_DOCTORS_CLINIC, "진료소"},
++    {TR_HOTKEY_BUILD_MENU_CLEAR_LAND, "철거 메뉴"},
++    {TR_HOTKEY_BUILD_MENU_ROAD, "도로 메뉴"},
+ };
+ 
+ void translation_korean(const translation_string **strings, int *num_strings)
+diff --git a/src/translation/translation.h b/src/translation/translation.h
+index 4cbf271..4026149 100644
+--- a/src/translation/translation.h
++++ b/src/translation/translation.h
+@@ -2393,6 +2393,8 @@ typedef enum {
+     TR_TERRAIN_BEACH,
+     TR_TERRAIN_BEACH_DESC,
+     TR_CHEAT_FILL_MARKETS,
++    TR_HOTKEY_BUILD_MENU_CLEAR_LAND,
++    TR_HOTKEY_BUILD_MENU_ROAD,
+     TRANSLATION_MAX_KEY
+ } translation_key;
+ 
 diff --git a/src/widget/sidebar/city.c b/src/widget/sidebar/city.c
-index 9678988..0c1da5c 100644
+index 9678988..8172a97 100644
 --- a/src/widget/sidebar/city.c
 +++ b/src/widget/sidebar/city.c
 @@ -6,6 +6,7 @@
@@ -368,8 +425,8 @@ index 9678988..0c1da5c 100644
 +// Same order as the first 12 entries of buttons_build_collapsed and buttons_build_expanded
 +static const hotkey_action build_button_hotkeys[] = {
 +    HOTKEY_BUILD_VACANT_HOUSE,
-+    HOTKEY_BUILD_CLEAR_LAND,
-+    HOTKEY_BUILD_ROAD,
++    HOTKEY_BUILD_MENU_CLEAR_LAND,
++    HOTKEY_BUILD_MENU_ROAD,
 +    HOTKEY_BUILD_MENU_WATER,
 +    HOTKEY_BUILD_MENU_HEALTH,
 +    HOTKEY_BUILD_MENU_TEMPLES,
@@ -565,7 +622,7 @@ index aba7eae..abb97c5 100644
  void window_city_draw_panels(void);
  void window_city_draw(void);
 diff --git a/src/window/hotkey_config.c b/src/window/hotkey_config.c
-index f2cc643..2efaeda 100644
+index f2cc643..99b0ee6 100644
 --- a/src/window/hotkey_config.c
 +++ b/src/window/hotkey_config.c
 @@ -23,6 +23,7 @@
@@ -576,10 +633,12 @@ index f2cc643..2efaeda 100644
  
  #define NUM_VISIBLE_OPTIONS 14
  #define NUM_BOTTOM_BUTTONS 3
-@@ -86,6 +87,15 @@ static hotkey_widget hotkey_widgets[] = {
+@@ -86,6 +87,17 @@ static hotkey_widget hotkey_widgets[] = {
      {HOTKEY_BUILD_REPAIR_LAND, TR_BUILDING_LAND_REPAIR},
      {HOTKEY_BUILD_VACANT_HOUSE, TR_NONE, 67, 7},
      {HOTKEY_BUILD_ROAD, TR_NONE, GROUP_BUILDINGS, BUILDING_ROAD},
++    {HOTKEY_BUILD_MENU_CLEAR_LAND, TR_HOTKEY_BUILD_MENU_CLEAR_LAND},
++    {HOTKEY_BUILD_MENU_ROAD, TR_HOTKEY_BUILD_MENU_ROAD},
 +    {HOTKEY_BUILD_MENU_WATER, TR_NONE, GROUP_SIDEBAR_TOOLTIPS, 23},
 +    {HOTKEY_BUILD_MENU_HEALTH, TR_NONE, GROUP_SIDEBAR_TOOLTIPS, 24},
 +    {HOTKEY_BUILD_MENU_TEMPLES, TR_NONE, GROUP_SIDEBAR_TOOLTIPS, 25},

@@ -37,7 +37,8 @@ No gameplay rules are changed. For save compatibility see [Saves](#saves).
 | Religion | `G` | Industry | `I` |
 | **Roadblock** | `B` | | |
 
-- Housing, clear land, road and roadblock select the build tool directly.
+- Housing and roadblock select the build tool directly.
+- Clear land (`X`) and road (`R`) open their menus like the other categories, because Augustus adds repair area, highway and roadblock to them. Clear land is `X` → `1`, road is `R` → `1`.
 - Every key can be changed in the game. See [Settings](#settings).
 
 ### Differences from the Julius mod
@@ -47,6 +48,7 @@ No gameplay rules are changed. For save compatibility see [Saves](#saves).
 | `Shift`+`R` rotate building | Stock Augustus uses `R` to rotate buildings. It moves to `Shift`+`R` so that `R` can be the road key. |
 | `Shift`+`X` mothball building | Stock Augustus uses `X` to mothball/enable a building. It moves to `Shift`+`X` so that `X` can be the clear land key. |
 | `B` roadblock | Julius has no roadblock, so this key is new. |
+| `X` / `R` open menus | In Julius they pick clear land and road directly. Here they open the clear land and road menus, so clear land is `X` → `1` and road is `R` → `1`. |
 | `-` `=` | Augustus menus can have more than 10 items, so the 11th and 12th items use `-` and `=` on the number row. |
 | First submenu item | Submenus such as small temples, large temples, altars and trees start with "Auto cycle". That makes the small temple of Mars `G` → `1` → `5`. |
 
@@ -60,7 +62,7 @@ All other stock Augustus hotkeys, such as `Q` (clone the building under the curs
 | `-`, `=` | Pick the 11th and 12th item |
 | Same category key | Close the menu |
 | Another category key | Switch to that menu |
-| `H` `X` `R` `B` | Close the menu and pick housing, clear land, road or roadblock |
+| `H` `B` | Close the menu and pick housing or roadblock |
 | `Esc` / right click | Close the menu |
 
 When no menu is open, the number keys open the advisors as before.
@@ -71,6 +73,8 @@ This is the order when every building is allowed. **Buildings the current missio
 
 | Menu (key) | Items |
 |---|---|
+| Clear land (`X`) | 1 Clear land · 2 Repair area |
+| Road (`R`) | 1 Road · 2 Highway · 3 Roadblock |
 | Water (`A`) | 1 Reservoir · 2 Aqueduct · 3 Fountain · 4 Well |
 | Health (`K`) | 1 Barber · 2 Baths · 3 Doctor · 4 Hospital · 5 Latrine |
 | Religion (`G`) | 1 Small temples ▶ · 2 Large temples ▶ · 3 Grand temple ▶ · 4 Altar ▶ · 5 Lararium · 6 Oracle · 7 Small mausoleum · 8 Large mausoleum · 9 Nymphaeum |
@@ -83,7 +87,7 @@ This is the order when every building is allowed. **Buildings the current missio
 
 ▶ marks a submenu. In-game names depend on your language.
 
-The sidebar road button opens a menu with road, highway and roadblock, and the clear land button opens clear land and repair area. `R` and `X` pick road and clear land directly. To get keys for highway and repair area too, assign them to "Highway" and "Repair area" in the hotkey settings.
+Roadblock also has its own key, `B`. If you prefer one-key road or clear land, assign keys to "Road" and "Clear land" in the hotkey settings.
 ## Installation
 
 **Requirements**: the original Caesar III game files (Steam, GOG or CD, with the 1.0.1.0 patch).
@@ -184,6 +188,7 @@ Linux and macOS builds follow Augustus's [build guide](https://github.com/Keriew
 | `src/widget/sidebar/city.c` | Key labels on the sidebar build buttons |
 | `src/core/config.c` | "Enable build menu shortcuts" on by default |
 | `src/window/hotkey_config.c` | Category entries in the hotkey settings screen |
+| `src/translation/*` | Names of the clear land and road menu hotkeys (English, Korean) |
 
 The category names come from the game's own sidebar tooltips, so no translation files were changed.
 
